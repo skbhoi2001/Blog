@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+
 const {
   postCreateController,
   postGetController,
@@ -7,9 +9,16 @@ const {
   postUpdateController,
 } = require("../../controllers/posts/posts");
 const postsRoutes = express.Router();
+const protected = require("../../middlewares/protected");
+const storage = require("../../config/cloudnary");
+
+//! instances of multers
+const upload = multer({
+  storage,
+});
 
 //! create post
-postsRoutes.post("/", postCreateController);
+postsRoutes.post("/", protected, upload.single("file"), postCreateController);
 
 //! get all post
 postsRoutes.get("/", postGetController);
@@ -18,9 +27,9 @@ postsRoutes.get("/", postGetController);
 postsRoutes.get("/:id", postGetByIdController);
 
 //! delete post
-postsRoutes.delete("/:id", postDeleteController);
+postsRoutes.delete("/:id", protected, postDeleteController);
 
 //!update post
-postsRoutes.put("/:id", postUpdateController);
+postsRoutes.put("/:id", protected, upload.single("file"), postUpdateController);
 
 module.exports = postsRoutes;
