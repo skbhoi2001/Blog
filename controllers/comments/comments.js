@@ -1,51 +1,122 @@
-const createCommentController = async (req, res) => {
+const Comment = require("../../models/comment/Comment");
+const Post = require("../../models/post/Post");
+const User = require("../../models/user/User");
+const appErr = require("../../utils/appErr");
+
+const createCommentController = async (req, res, next) => {
+  const { message } = req.body;
+
+  if (!message) {
+    return next(appErr("Please enter message"));
+  }
+
+  //!find post
+  const post = await Post.findById(req.params.id);
+
+  //! create comments
+  const comment = await Comment.create({
+    user: req.session.userAuth,
+    message,
+  });
+
+  //! push to the post
+  post.comments.push(comment._id);
+
+  //! find user
+  const user = await User.findById(req.session.userAuth);
+
+  //! push the comment to user
+  user.comments.push(comment._id);
+
+  //! disable validation to save user and post
+  await post.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
+
   try {
     res.json({
       status: "success",
       user: "create comment",
     });
   } catch (error) {
-    console.log("create comment", error.message);
+    return next(appErr(error.message));
   }
 };
-const getAllCommentController = async (req, res) => {
+const getAllCommentController = async (req, res, next) => {
   try {
     res.json({
       status: "success",
-      user: "getAll comment",
+      message: "comment submitted",
     });
   } catch (error) {
-    console.log("getAll comment", error.message);
+    return next(appErr(error.message));
   }
 };
-const getCommentByIdCommentController = async (req, res) => {
+const getCommentByIdCommentController = async (req, res, next) => {
   try {
     res.json({
       status: "success",
       user: "getCommentById comment",
     });
   } catch (error) {
-    console.log("getCommentById comment", error.message);
+    return next(appErr(error.message));
   }
 };
-const deleteCommentController = async (req, res) => {
+const deleteCommentController = async (req, res, next) => {
   try {
+    //! found comment
+    const comment = await Comment.findById(req.params.id);
+
+    //! check if the comment belong to the user
+    if (comment.user.toString() !== req.session.userAuth.toString()) {
+      return next(appErr("Not allowed to delete", 403));
+    }
+
+    await Comment.findByIdAndDelete(req.params.id);
     res.json({
       status: "success",
       user: "delete comment",
     });
   } catch (error) {
-    console.log("delete comment", error.message);
+    return next(appErr(error.message));
   }
 };
-const updateCommentController = async (req, res) => {
+const updateCommentController = async (req, res, next) => {
+  const { message } = req.body;
+
+  if (!message) {
+    return next(appErr("All fields are required"));
+  }
+
+  //! found comment
+  const comment = await Comment.findById(req.params.id);
+
+  //! check comment exists
+  if (!comment) {
+    return next(appErr("Comment soesnot exists", 403));
+  }
+
+  //! check if the comment belong to the user
+  if (comment.user.toString() !== req.session.userAuth.toString()) {
+    return next(appErr("Not allowed to Update", 403));
+  }
+
+  const commentUpdate = await Comment.findByIdAndUpdate(
+    req.params.id,
+    {
+      message: message,
+    },
+    {
+      new: true,
+    }
+  );
+
   try {
     res.json({
       status: "success",
-      user: "update comment",
+      data: commentUpdate,
     });
   } catch (error) {
-    console.log("update comment", error.message);
+    return next(appErr(error.message));
   }
 };
 

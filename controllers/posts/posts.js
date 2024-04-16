@@ -40,7 +40,7 @@ const postCreateController = async (req, res, next) => {
   }
 };
 const postGetController = async (req, res, next) => {
-  const posts = await Post.find();
+  const posts = await Post.find().populate("comments");
 
   try {
     res.json({
@@ -56,7 +56,7 @@ const postGetByIdController = async (req, res, next) => {
   const id = req.params.id;
 
   //! find the post
-  const post = await Post.findById(id);
+  const post = await Post.findById(id).populate("comments");
 
   try {
     res.json({

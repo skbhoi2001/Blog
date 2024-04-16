@@ -120,7 +120,9 @@ const profileController = async (req, res) => {
     const userId = req.session.userAuth;
 
     //find user
-    const user = await User.findById(userId).populate("posts");
+    const user = await User.findById(userId)
+      .populate("posts")
+      .populate("comments");
 
     res.json({
       status: "success",
