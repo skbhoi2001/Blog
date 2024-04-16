@@ -130,24 +130,64 @@ const profileController = async (req, res) => {
     console.log("profile", error.message);
   }
 };
-const userProfilePhotoUploadController = async (req, res) => {
+const userProfilePhotoUploadController = async (req, res, next) => {
   try {
+    //! find user
+
+    const userId = req.session.userAuth;
+    const userFound = await User.findById(userId);
+
+    if (!userFound) {
+      return next(appErr("User not found", 400));
+    }
+
+    let profile = await User.findByIdAndUpdate(
+      userId,
+      {
+        profileImage: req.file.path,
+      },
+      {
+        new: true,
+      }
+    );
+
     res.json({
       status: "success",
-      user: "user userProfilePhotoUpload",
+      message: "Profile uploaded",
+      data: profile,
     });
   } catch (error) {
-    console.log("userProfilePhotoUpload", error.message);
+    return next(appErr(error.message, 400));
   }
 };
 const userCoverPhotoUploadController = async (req, res) => {
   try {
+    //! find user
+
+    const userId = req.session.userAuth;
+    const userFound = await User.findById(userId);
+
+    if (!userFound) {
+      return next(appErr("User not found", 400));
+    }
+
+    let coverImage = await User.findByIdAndUpdate(
+      userId,
+      {
+        coverImage: req.file.path,
+      },
+      {
+        new: true,
+      }
+    );
+
     res.json({
       status: "success",
-      user: "user userCoverPhotoUpload",
+      message: "Cover uploaded",
+      data: coverImage,
     });
   } catch (error) {
-    console.log("userCoverPhotoUpload", error.message);
+    return next(appErr(error.message, 400));
   }
 };
 const userUpdatePasswordController = async (req, res) => {
