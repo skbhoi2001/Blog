@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
@@ -10,6 +11,7 @@ const detailRoutes = require("./routes/details/details");
 require("./config/dbConnect");
 
 const app = express();
+app.use(cors());
 
 //middleware
 app.use(express.json()); //pass incoming data
@@ -27,6 +29,11 @@ app.use(
   })
 );
 
+app.use(
+  cors({
+    origin: "*", // Allow requests from any origin
+  })
+);
 app.get("/test", (req, res) => {
   res.json("Chal to raha hai");
 });
