@@ -56,7 +56,7 @@ const postGetByIdController = async (req, res, next) => {
   const id = req.params.id;
 
   //! find the post
-  const post = await Post.findById(id).populate("comments");
+  const post = await Post.findById(id).populate("comments").populate("details");
 
   try {
     res.json({

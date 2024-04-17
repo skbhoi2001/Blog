@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema(
     },
     posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+    details: [{ type: mongoose.Schema.Types.ObjectId, ref: "Detail" }],
   },
   {
     timestamps: true,

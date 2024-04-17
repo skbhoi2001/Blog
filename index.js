@@ -6,6 +6,7 @@ const userRoutes = require("./routes/users/users");
 const postsRoutes = require("./routes/posts/posts");
 const commentsRoutes = require("./routes/comments/comments");
 const globalErrHandler = require("./middlewares/golbalHandler");
+const detailRoutes = require("./routes/details/details");
 require("./config/dbConnect");
 
 const app = express();
@@ -38,6 +39,9 @@ app.use("/api/v1/posts", postsRoutes);
 
 //!comments
 app.use("/api/v1/comments", commentsRoutes);
+
+//!detailing
+app.use("/api/v1/detail", detailRoutes);
 
 //Error handler middleware
 app.use(globalErrHandler);
