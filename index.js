@@ -26,6 +26,10 @@ app.use(
   })
 );
 
+app.get("/test", (req, res) => {
+  res.json("Chal to raha hai");
+});
+
 //!userRoute
 app.use("/api/v1/users", userRoutes);
 
