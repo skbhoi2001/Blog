@@ -5,12 +5,14 @@ const appErr = require("../../utils/appErr");
 
 const detailCreateController = async (req, res, next) => {
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
     const { title, description, code } = req.body;
     if (!title || !description || !code || !req.file) {
       return next(appErr("All fields are required"));
     }
 
-    const userId = req.session.userAuth;
+    const userId = auth;
     const userFound = await User.findById(userId);
 
     if (!userFound) {
@@ -35,7 +37,7 @@ const detailCreateController = async (req, res, next) => {
     userFound.details.push(detailCreate._id);
 
     //! find user
-    const user = await User.findById(req.session.userAuth);
+    const user = await User.findById(auth);
 
     await post.save({ validateBeforeSave: false });
     await user.save({ validateBeforeSave: false });
@@ -68,6 +70,8 @@ const detailgetByIdController = async (req, res, next) => {
 
 const detailEditController = async (req, res, next) => {
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
     const { title, description, code } = req.body;
     if (!title || !description || !code || !req.file) {
       return next(appErr("All fields are required"));
@@ -75,7 +79,7 @@ const detailEditController = async (req, res, next) => {
 
     const detail = await Detail.findById(req.params.id);
 
-    if (detail.user.toString() !== req.session.userAuth.toString()) {
+    if (detail.user.toString() !== auth.toString()) {
       return next(appErr("Not allowed to update", 403));
     }
     const detailUpdate = await Detail.findByIdAndUpdate(
@@ -102,9 +106,11 @@ const detailEditController = async (req, res, next) => {
 
 const detailDeleteController = async (req, res, next) => {
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
     const detail = await Detail.findById(req.params.id);
 
-    if (detail.user.toString() !== req.session.userAuth.toString()) {
+    if (detail.user.toString() !== auth.toString()) {
       return next(appErr("Not allowed to update", 403));
     }
     await Detail.findByIdAndDelete(req.params.id);

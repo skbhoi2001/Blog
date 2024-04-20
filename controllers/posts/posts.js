@@ -3,15 +3,16 @@ const User = require("../../models/user/User");
 const appErr = require("../../utils/appErr");
 
 const postCreateController = async (req, res, next) => {
-  const { title, description, category, user } = req.body;
-
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
+    const { title, description, category } = req.body;
     if (!title || !description || !category || !req.file) {
       return next(appErr("All fields are required"));
     }
 
     //! find user
-    const userId = req.session.userAuth;
+    const userId = auth;
     const userFound = await User.findById(userId);
 
     //! create post
@@ -68,17 +69,18 @@ const postGetByIdController = async (req, res, next) => {
   }
 };
 const postDeleteController = async (req, res, next) => {
-  //! found post
-  const post = await Post.findById(req.params.id);
-
-  //! check if the post belong to the user
-  if (post.user.toString() !== req.session.userAuth.toString()) {
-    return next(appErr("Not allowed to delete", 403));
-  }
-
-  await Post.findByIdAndDelete(req.params.id);
-
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
+    //! found post
+    const post = await Post.findById(req.params.id);
+
+    //! check if the post belong to the user
+    if (post.user.toString() !== auth.toString()) {
+      return next(appErr("Not allowed to delete", 403));
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
     res.json({
       status: "success",
       message: "post deleted",
@@ -88,34 +90,35 @@ const postDeleteController = async (req, res, next) => {
   }
 };
 const postUpdateController = async (req, res, next) => {
-  const { title, description, category } = req.body;
-
-  if (!title || !description || !category || !req.file) {
-    return next(appErr("All fields are required"));
-  }
-
-  //! found post
-  const post = await Post.findById(req.params.id);
-
-  //! check if the post belong to the user
-  if (post.user.toString() !== req.session.userAuth.toString()) {
-    return next(appErr("Not allowed to delete", 403));
-  }
-
-  const postUpdate = await Post.findByIdAndUpdate(
-    req.params.id,
-    {
-      title,
-      description,
-      category,
-      image: req.file.path,
-    },
-    {
-      new: true,
-    }
-  );
-
   try {
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
+    const { title, description, category } = req.body;
+
+    if (!title || !description || !category || !req.file) {
+      return next(appErr("All fields are required"));
+    }
+
+    //! found post
+    const post = await Post.findById(req.params.id);
+
+    //! check if the post belong to the user
+    if (post.user.toString() !== auth.toString()) {
+      return next(appErr("Not allowed to delete", 403));
+    }
+
+    const postUpdate = await Post.findByIdAndUpdate(
+      req.params.id,
+      {
+        title,
+        description,
+        category,
+        image: req.file.path,
+      },
+      {
+        new: true,
+      }
+    );
     res.json({
       status: "success",
       data: postUpdate,

@@ -3,15 +3,14 @@ const User = require("../../models/user/User");
 const appErr = require("../../utils/appErr");
 
 const registerController = async (req, res, next) => {
-  const { fullname, email, password } = req.body;
-
-  //!if field is empty
-
-  if (!fullname || !email || !password) {
-    return next(appErr("Please enter details", 400));
-  }
-
   try {
+    const { fullname, email, password } = req.body;
+
+    //!if field is empty
+
+    if (!fullname || !email || !password) {
+      return next(appErr("Please enter details", 400));
+    }
     //! check user exists
     const userFound = await User.findOne({ email });
     if (userFound) {
@@ -64,6 +63,7 @@ const loginController = async (req, res, next) => {
     res.json({
       status: "success",
       data: userFound,
+      token: req.session.userAuth,
     });
   } catch (error) {
     console.log("login", error.message);
@@ -85,26 +85,25 @@ const getByIdController = async (req, res) => {
   }
 };
 const userUpdateController = async (req, res, next) => {
-  const { fullname, email } = req.body;
-  console.log("1");
-  if (email) {
-    const emailTaken = await User.findOne({ email });
-    if (emailTaken) {
-      return next(appErr("Email already taken", 400));
-    }
-  }
-
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    {
-      fullname,
-      email,
-    },
-    {
-      new: true,
-    }
-  );
   try {
+    const { fullname, email } = req.body;
+    // if (email) {
+    //   const emailTaken = await User.findOne({ email });
+    //   if (emailTaken) {
+    //     return next(appErr("Email already taken", 400));
+    //   }
+    // }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        fullname,
+        email,
+      },
+      {
+        new: true,
+      }
+    );
     res.json({
       status: "success",
       data: user,
@@ -116,8 +115,9 @@ const userUpdateController = async (req, res, next) => {
 
 const profileController = async (req, res) => {
   try {
+    let token = JSON.stringify(req.headers["token"]);
     // get login user
-    const userId = req.session.userAuth;
+    const userId = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
 
     //find user
     const user = await User.findById(userId)
@@ -135,8 +135,10 @@ const profileController = async (req, res) => {
 const userProfilePhotoUploadController = async (req, res, next) => {
   try {
     //! find user
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
 
-    const userId = req.session.userAuth;
+    const userId = auth;
     const userFound = await User.findById(userId);
 
     if (!userFound) {
@@ -165,8 +167,10 @@ const userProfilePhotoUploadController = async (req, res, next) => {
 const userCoverPhotoUploadController = async (req, res) => {
   try {
     //! find user
+    let token = JSON.stringify(req.headers["token"]);
+    let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
 
-    const userId = req.session.userAuth;
+    const userId = auth;
     const userFound = await User.findById(userId);
 
     if (!userFound) {
@@ -193,24 +197,24 @@ const userCoverPhotoUploadController = async (req, res) => {
   }
 };
 const userUpdatePasswordController = async (req, res) => {
-  const { email, password } = req.body;
-
-  //check if the user updating passowrd
-  if (password) {
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHashed = bcrypt.hashSync(password, salt);
-
-    await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        password: passwordHashed,
-      },
-      {
-        new: true,
-      }
-    );
-  }
   try {
+    const { email, password } = req.body;
+
+    //check if the user updating passowrd
+    if (password) {
+      const salt = bcrypt.genSaltSync(10);
+      const passwordHashed = bcrypt.hashSync(password, salt);
+
+      await User.findByIdAndUpdate(
+        req.params.id,
+        {
+          password: passwordHashed,
+        },
+        {
+          new: true,
+        }
+      );
+    }
     res.json({
       status: "success",
       user: "password updated successfully",

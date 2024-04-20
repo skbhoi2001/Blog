@@ -4,6 +4,8 @@ const User = require("../../models/user/User");
 const appErr = require("../../utils/appErr");
 
 const createCommentController = async (req, res, next) => {
+  let token = JSON.stringify(req.headers["token"]);
+  let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
   const { message } = req.body;
 
   if (!message) {
@@ -15,7 +17,7 @@ const createCommentController = async (req, res, next) => {
 
   //! create comments
   const comment = await Comment.create({
-    user: req.session.userAuth,
+    user: auth,
     message,
   });
 
@@ -23,7 +25,7 @@ const createCommentController = async (req, res, next) => {
   post.comments.push(comment._id);
 
   //! find user
-  const user = await User.findById(req.session.userAuth);
+  const user = await User.findById(auth);
 
   //! push the comment to user
   user.comments.push(comment._id);
@@ -35,7 +37,7 @@ const createCommentController = async (req, res, next) => {
   try {
     res.json({
       status: "success",
-      user: "create comment",
+      data: "create comment",
     });
   } catch (error) {
     return next(appErr(error.message));
@@ -62,12 +64,14 @@ const getCommentByIdCommentController = async (req, res, next) => {
   }
 };
 const deleteCommentController = async (req, res, next) => {
+  let token = JSON.stringify(req.headers["token"]);
+  let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
   try {
     //! found comment
     const comment = await Comment.findById(req.params.id);
 
     //! check if the comment belong to the user
-    if (comment.user.toString() !== req.session.userAuth.toString()) {
+    if (comment.user.toString() !== auth.toString()) {
       return next(appErr("Not allowed to delete", 403));
     }
 
@@ -82,6 +86,8 @@ const deleteCommentController = async (req, res, next) => {
 };
 const updateCommentController = async (req, res, next) => {
   const { message } = req.body;
+  let token = JSON.stringify(req.headers["token"]);
+  let auth = token.replace(/^"(.*)"$/, "$1") || req.session.userAuth;
 
   if (!message) {
     return next(appErr("All fields are required"));
@@ -96,7 +102,7 @@ const updateCommentController = async (req, res, next) => {
   }
 
   //! check if the comment belong to the user
-  if (comment.user.toString() !== req.session.userAuth.toString()) {
+  if (comment.user.toString() !== auth.toString()) {
     return next(appErr("Not allowed to Update", 403));
   }
 
